@@ -103,9 +103,11 @@ class FrozenLake(Environment):
         
     def p(self, next_state, state, action):
         # TODO:
+        pass
     
     def r(self, next_state, state, action):
         # TODO:
+        pass
    
     def render(self, policy=None, value=None):
         if policy is None:
@@ -150,7 +152,7 @@ def play(env):
 
 ################ Model-based algorithms ################
 
- def policy_evaluation(env, policy, gamma, theta, max_iterations):
+def policy_evaluation(env, policy, gamma, theta, max_iterations):
     value = np.zeros(env.n_states, dtype=np.float)
 
     # TODO:
