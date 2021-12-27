@@ -90,12 +90,14 @@ class FrozenLake(Environment):
         self.n_states = self.lake.size + 1
         self.n_actions = 4
         
-        pi = np.zeros(self.n_states, dtype=float)
-        pi[np.where(self.lake_flat == '&')[0]] = 1.0
+        self.pi = np.zeros(self.n_states, dtype=float)
+        self.pi[np.where(self.lake_flat == '&')[0]] = 1.0
         
         self.absorbing_state = self.n_states - 1
         
         # TODO:
+        self.max_steps = max_steps
+        self.random_state = np.random.RandomState(seed)
         
     def step(self, action):
         state, reward, done = Environment.step(self, action)
@@ -216,7 +218,7 @@ def sarsa(env, max_episodes, eta, gamma, epsilon, seed=None):
     
         #e-greedy policy
         if epsilon[i] > np.random.rand(1)[0]:
-            curr_action = np.random(env.n_actions)
+            curr_action = np.random.choice(env.n_actions)
         else:
             curr_action= np.argmax(q[s]) 
 
@@ -256,7 +258,27 @@ def q_learning(env, max_episodes, eta, gamma, epsilon, seed=None):
     for i in range(max_episodes):
         s = env.reset()
         # TODO:
-        
+
+        curr_action = None
+
+        done = False
+        while not done:
+
+            #e-greedy policy
+            if epsilon[i] > np.random.rand(1)[0]:
+                curr_action = np.random(env.n_actions)
+            else:
+                curr_action = np.argmax(q[s])  
+
+            #updating state variable
+            next_state, next_reward, done = env.step(curr_action)   
+
+            #updating q values
+            q[s][curr_action] = q[s][curr_action] + eta[i] * (next_reward + gamma * np.max(q[next_state][best_action] for best_action in range(env.n_actions)) - q[s][curr_action])
+
+            #updating current state and action
+            s = next_state
+            
     policy = q.argmax(axis=1)
     value = q.max(axis=1)
         
@@ -324,7 +346,7 @@ def linear_sarsa(env, max_episodes, eta, gamma, epsilon, seed=None):
     
         #e-greedy policy
         if epsilon[i] > np.random.rand(1)[0]:
-            curr_action = np.random(env.n_actions)
+            curr_action = np.random.choice(env.n_actions)
         else:
             curr_action= np.argmax(q[features]) 
 
@@ -368,9 +390,36 @@ def linear_q_learning(env, max_episodes, eta, gamma, epsilon, seed=None):
     for i in range(max_episodes):
         features = env.reset()
         
-        # TODO:
+        q = features.dot(theta)
 
-    return theta    
+        # TODO:
+        curr_action = None
+    
+        done = False
+        while not done:
+
+            #e-greedy policy
+            if epsilon[i] > np.random.rand(1)[0]:
+                curr_action = np.random(env.n_actions)
+            else:
+                curr_action = np.argmax(q)      
+
+            #updating feature variable
+            next_feature, next_reward, done = env.step(curr_action)
+
+            #updating delta
+            delta = next_reward - q(curr_action)
+
+            #updating q
+            q = next_feature.dot(theta)
+
+            #updating delta and theta
+            delta = delta + gamma * np.max(q)
+            theta[i] = theta[i] + eta[i] * delta * features[curr_action]
+
+            features = next_feature
+    
+    return theta   
 
 ################ Main function ################
 
