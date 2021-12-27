@@ -207,45 +207,39 @@ def sarsa(env, max_episodes, eta, gamma, epsilon, seed=None):
     
     q = np.zeros((env.n_states, env.n_actions))
 
-    actions = [0, 1, 2, 3]
-    """"
-    0=up
-    1=left
-    s=down
-    d=right
-    """
-    best_action = None
-    
     for i in range(max_episodes):
         s = env.reset()
         # TODO:
 
+        best_action = None
+        curr_action = None
+    
         #e-greedy policy
         if epsilon[i] > np.random.rand(1)[0]:
-            best_action = np.random(actions)
+            curr_action = np.random(env.n_actions)
         else:
-            best_action = np.argmax(env.p(s,random_state,actions[i]) for i in actions) 
+            curr_action= np.argmax(q[s]) 
 
 
-        state1, reward1, done = env.step(best_action)
-        while done:
+        done = False
+        while not done:
+
+            #updating state variable
+            next_state, next_reward, done = env.step(curr_action)  
 
             #e-greedy policy
             if epsilon[i] > np.random.rand(1)[0]:
-                best_action = np.random(actions)
+                best_action = np.random(env.n_actions)
             else:
-                best_action = np.argmax(env.p(s,random_state,actions[i]) for i in actions)      
+                best_action = np.argmax(q[next_state])   
 
             #updating q values
-            for j in range(env.n_states):
-                for k in range(env.n_actions):
-                    q[j][k] = q[j][k] + eta[i] * (reward1 + gamma * q[state1][best_action] - q[j][k])
+            q[s][curr_action] = q[s][curr_action] + eta[i] * (next_reward + gamma * q[next_state][best_action] - q[s][curr_action])
+
+            #updating current state and action
+            s = next_state
+            curr_action = best_action
             
-            #updating state variable
-            state1, reward1, done = env.step(best_action)
- 
-
-
     policy = q.argmax(axis=1)
     value = q.max(axis=1)
         
@@ -317,15 +311,6 @@ def linear_sarsa(env, max_episodes, eta, gamma, epsilon, seed=None):
     epsilon = np.linspace(epsilon, 0, max_episodes)
     
     theta = np.zeros(env.n_features)
-
-    actions = [0, 1, 2, 3]
-    """"
-    0=up
-    1=left
-    s=down
-    d=right
-    """
-    best_action = None
     
     for i in range(max_episodes):
         features = env.reset()
@@ -333,36 +318,42 @@ def linear_sarsa(env, max_episodes, eta, gamma, epsilon, seed=None):
         q = features.dot(theta)
 
         # TODO:
+
+        best_action = None
+        curr_action = None
+    
         #e-greedy policy
         if epsilon[i] > np.random.rand(1)[0]:
-            best_action = np.random(actions)
+            curr_action = np.random(env.n_actions)
         else:
-            best_action = np.argmax(env.p(s,random_state,actions[i]) for i in actions) 
+            curr_action= np.argmax(q[features]) 
 
 
-        state1, reward1, done = env.step(best_action)
-        while done:
+        done = False
+        while not done:
+
+            #updating feature variable
+            next_feature, next_reward, done = env.step(curr_action)
 
             #e-greedy policy
             if epsilon[i] > np.random.rand(1)[0]:
-                best_action = np.random(actions)
+                best_action = np.random(env.n_actions)
             else:
-                best_action = np.argmax(env.p(s,random_state,actions[i]) for i in actions)      
+                best_action = np.argmax(q)      
 
 
             #updating delta
-            delta = reward1 - q(best_action)
+            delta = next_reward - q(best_action)
 
             #updating q
-            q = state1.dot(theta)
+            q = next_feature.dot(theta)
 
             #updating delta and theta
             delta = delta + gamma * q[best_action]
+            theta[i] = theta[i] + eta[i] * delta * features
 
-            theta[i] = theta[i] + eta[i] * delta * state1
-            
-            #updating state variable
-            state1, reward1, done = env.step(best_action)
+            features = next_feature
+            curr_action = best_action
     
     return theta
     
