@@ -96,7 +96,21 @@ class FrozenLake(Environment):
         self.absorbing_state = self.n_states - 1
         
         # TODO:
-        
+        # call parent constructor
+        Environment.__init__(self, self.n_states, self.n_actions, max_steps, pi, seed)
+        self.actions = ['w', 'a', 's', 'd']
+        # Matrix with lake shape initialized
+        self.reward_map = np.zeros(self.lake.shape, dtype=np.float)
+        # goal state setting to 1
+        self.reward_map[np.where(self.lake == '$')] = 1
+        # Matrix with absorbing state initialized.
+        self.absorbing_state = np.zeros(self.lake.shape, dtype=np.float)
+        # Set goal state and holes as 1
+        self.absorbing_state[np.where(self.lake == '$')] = 1
+        self.absorbing_state[np.where(self.lake == '#')] = 1
+
+
+
     def step(self, action):
         state, reward, done = Environment.step(self, action)
         
