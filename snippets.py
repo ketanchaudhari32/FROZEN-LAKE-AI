@@ -224,7 +224,7 @@ def sarsa(env, max_episodes, eta, gamma, epsilon, seed=None):
         if epsilon[i] > np.random.rand(1)[0]:
             best_action = np.random(actions)
         else:
-            best_action = np.argmax(env.p(s,random_state,actions[i]) for i in actions) 
+            best_action = np.argmax(env.p(s,random_state,actions[i]) for i in actions)
 
 
         state1, reward1, done = env.step(best_action)
@@ -258,10 +258,36 @@ def q_learning(env, max_episodes, eta, gamma, epsilon, seed=None):
     epsilon = np.linspace(epsilon, 0, max_episodes)
     
     q = np.zeros((env.n_states, env.n_actions))
+
+    actions = [0, 1, 2, 3]
+    """"
+    0=up
+    1=left
+    2=down
+    3=right
+    """
+    action = None
+    done = False
     
     for i in range(max_episodes):
         s = env.reset()
         # TODO:
+
+        while not done:
+            # e-greedy policy
+            if epsilon[i] > np.random.rand(1)[0]:
+                action = np.random(actions)
+            else:
+                action = np.argmax(env.p(s, random_state, actions[i]) for i in actions)
+
+            # Get the observations after taking the action
+            state1, reward1, done = env.step(action)
+
+            best_next_action = np.argmax(q[state1])
+            # Updating q value
+            q[s][action] = q[s][action] + eta[i] * (reward1 + gamma * q[state1][best_next_action] - q[s][action])
+
+            state = state1
         
     policy = q.argmax(axis=1)
     value = q.max(axis=1)
