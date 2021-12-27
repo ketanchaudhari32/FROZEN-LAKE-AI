@@ -13,7 +13,10 @@ def _printoptions(*args, **kwargs):
     finally: 
         np.set_printoptions(**original)
 
-        
+#importing probaabilty data
+#prob = np.load('p.npy')
+#print(prob.shape)
+
 class EnvironmentModel:
     def __init__(self, n_states, n_actions, seed=None):
         self.n_states = n_states
@@ -69,14 +72,14 @@ class Environment(EnvironmentModel):
 class FrozenLake(Environment):
     def __init__(self, lake, slip, max_steps, seed=None):
         """
-    lake: A matrix that represents the lake. For example:
-     lake =  [['&', '.', '.', '.'],
+        lake: A matrix that represents the lake. For example:
+        lake =  [['&', '.', '.', '.'],
               ['.', '#', '.', '#'],
               ['.', '.', '.', '#'],
               ['#', '.', '.', '$']]
-    slip: The probability that the agent will slip
-    max_steps: The maximum number of time steps in an episode
-    seed: A seed to control the random number generator (optional)
+        slip: The probability that the agent will slip
+        max_steps: The maximum number of time steps in an episode
+        seed: A seed to control the random number generator (optional)
         """
         # start (&), frozen (.), hole (#), goal ($)
         self.lake = np.array(lake)
@@ -84,13 +87,13 @@ class FrozenLake(Environment):
         
         self.slip = slip
         
-        n_states = self.lake.size + 1
-        n_actions = 4
+        self.n_states = self.lake.size + 1
+        self.n_actions = 4
         
-        pi = np.zeros(n_states, dtype=float)
+        pi = np.zeros(self.n_states, dtype=float)
         pi[np.where(self.lake_flat == '&')[0]] = 1.0
         
-        self.absorbing_state = n_states - 1
+        self.absorbing_state = self.n_states - 1
         
         # TODO:
         
@@ -103,11 +106,19 @@ class FrozenLake(Environment):
         
     def p(self, next_state, state, action):
         # TODO:
-        pass
+        if state==next_state or self.lake[state][next_state]=='#':
+            return 0
+        elif self.lake[state][next_state]=='$':
+            return 1
+        else:
+            return 0.5
     
     def r(self, next_state, state, action):
         # TODO:
-        pass
+        if self.lake[state][next_state]=='$':
+            return 1
+        else:
+            return 0
    
     def render(self, policy=None, value=None):
         if policy is None:
@@ -173,7 +184,7 @@ def policy_iteration(env, gamma, theta, max_iterations, policy=None):
         policy = np.array(policy, dtype=int)
     
     # TODO:
-        
+    value = np.zeros(env.n_states)    
     return policy, value
     
 def value_iteration(env, gamma, theta, max_iterations, value=None):
@@ -183,7 +194,7 @@ def value_iteration(env, gamma, theta, max_iterations, value=None):
         value = np.array(value, dtype=np.float)
     
     # TODO:
-
+    policy = np.zeros(env.n_states, dtype=int)
     return policy, value
 
 ################ Tabular model-free algorithms ################
@@ -195,11 +206,46 @@ def sarsa(env, max_episodes, eta, gamma, epsilon, seed=None):
     epsilon = np.linspace(epsilon, 0, max_episodes)
     
     q = np.zeros((env.n_states, env.n_actions))
+
+    actions = [0, 1, 2, 3]
+    """"
+    0=up
+    1=left
+    s=down
+    d=right
+    """
+    best_action = None
     
     for i in range(max_episodes):
         s = env.reset()
         # TODO:
-    
+
+        #e-greedy policy
+        if epsilon[i] > np.random.rand(1)[0]:
+            best_action = np.random(actions)
+        else:
+            best_action = np.argmax(env.p(s,random_state,actions[i]) for i in actions) 
+
+
+        state1, reward1, done = env.step(best_action)
+        while done:
+
+            #e-greedy policy
+            if epsilon[i] > np.random.rand(1)[0]:
+                best_action = np.random(actions)
+            else:
+                best_action = np.argmax(env.p(s,random_state,actions[i]) for i in actions)      
+
+            #updating q values
+            for j in range(env.n_states):
+                for k in range(env.n_actions):
+                    q[j][k] = q[j][k] + eta[i] * (reward1 + gamma * q[state1][best_action] - q[j][k])
+            
+            #updating state variable
+            state1, reward1, done = env.step(best_action)
+ 
+
+
     policy = q.argmax(axis=1)
     value = q.max(axis=1)
         
@@ -271,6 +317,15 @@ def linear_sarsa(env, max_episodes, eta, gamma, epsilon, seed=None):
     epsilon = np.linspace(epsilon, 0, max_episodes)
     
     theta = np.zeros(env.n_features)
+
+    actions = [0, 1, 2, 3]
+    """"
+    0=up
+    1=left
+    s=down
+    d=right
+    """
+    best_action = None
     
     for i in range(max_episodes):
         features = env.reset()
@@ -278,6 +333,36 @@ def linear_sarsa(env, max_episodes, eta, gamma, epsilon, seed=None):
         q = features.dot(theta)
 
         # TODO:
+        #e-greedy policy
+        if epsilon[i] > np.random.rand(1)[0]:
+            best_action = np.random(actions)
+        else:
+            best_action = np.argmax(env.p(s,random_state,actions[i]) for i in actions) 
+
+
+        state1, reward1, done = env.step(best_action)
+        while done:
+
+            #e-greedy policy
+            if epsilon[i] > np.random.rand(1)[0]:
+                best_action = np.random(actions)
+            else:
+                best_action = np.argmax(env.p(s,random_state,actions[i]) for i in actions)      
+
+
+            #updating delta
+            delta = reward1 - q(best_action)
+
+            #updating q
+            q = state1.dot(theta)
+
+            #updating delta and theta
+            delta = delta + gamma * q[best_action]
+
+            theta[i] = theta[i] + eta[i] * delta * state1
+            
+            #updating state variable
+            state1, reward1, done = env.step(best_action)
     
     return theta
     
@@ -308,7 +393,7 @@ def main():
               ['#', '.', '.', '$']]
 
     env = FrozenLake(lake, slip=0.1, max_steps=16, seed=seed)
-    
+    print(env)
     print('# Model-based algorithms')
     gamma = 0.9
     theta = 0.001
@@ -364,3 +449,5 @@ def main():
                                    gamma, epsilon, seed=seed)
     policy, value = linear_env.decode_policy(parameters)
     linear_env.render(policy, value)
+
+main()
