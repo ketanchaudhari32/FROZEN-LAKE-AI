@@ -1,4 +1,5 @@
 ################ Environment ################
+from itertools import product
 
 import numpy as np
 import contextlib
@@ -81,6 +82,8 @@ class FrozenLake(Environment):
         max_steps: The maximum number of time steps in an episode
         seed: A seed to control the random number generator (optional)
         """
+        pnpy = np.load('p.npy')
+        print(pnpy)
         # start (&), frozen (.), hole (#), goal ($)
         self.lake = np.array(lake)
         self.lake_flat = self.lake.reshape(-1)
@@ -109,6 +112,8 @@ class FrozenLake(Environment):
         self.absorbing_state[np.where(self.lake == '$')] = 1
         self.absorbing_state[np.where(self.lake == '#')] = 1
 
+        self.index_to_coordinates = list(product(range(self.reward_map.shape[0]), range(self.reward_map.shape[1])))
+        self.coordinates_to_index = {s: i for (i, s) in enumerate(self.index_to_coordinates)}
 
 
     def step(self, action):
