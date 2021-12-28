@@ -73,7 +73,7 @@ class Environment(EnvironmentModel):
 
 
 class FrozenLake(Environment):
-    def __init__(self, lake, slip, max_steps, seed=None):
+    def __init__(self, lake, slip, max_steps, seed=None, action=None):
         """
         lake: A matrix that represents the lake. For example:
         lake =  [['&', '.', '.', '.'],
@@ -117,6 +117,9 @@ class FrozenLake(Environment):
         self.index_to_coordinates = list(product(range(self.reward_map.shape[0]), range(self.reward_map.shape[1])))
         self.coordinates_to_index = {s: i for (i, s) in enumerate(self.index_to_coordinates)}
 
+        hole = np.where(self.lake_flat == "#")[0]
+        self.goal = np.where(self.lake_flat == "$")
+
         # Checks to keep agent in the grid, so that it doesn't leave the grid
         def movement(row, column, action):
             # upward movement
@@ -133,6 +136,26 @@ class FrozenLake(Environment):
                 column = min(column + 1, self.lake.shape[1] - 1)
             return row, column
 
+        def new_matrix(row, column, action):
+
+            # grid check for next grid coordinates
+            new_row, new_column = movement(row, column, action)
+            # Change coordinates to index
+            state_next = self.coordinates_to_index[(new_row, new_column)]
+            # Get new coordinate type
+            coordinate_type = self.lake[row][column]
+            # Check whether we reached the goal or fell in hole
+            done = coordinate_type == '$' or coordinate_type == '#'
+            # if agent is at goal ($), reward = 1 else it is  0
+            reward = float(coordinate_type == '$')
+            return state_next, reward, done
+
+        for state in range(self.n_states):
+            if state == self.absorbing_state or state in hole or state in self.goal:
+                self.transitioning_probability[self.absorbing_state, state, action] = 1
+
+
+
 
 
 
@@ -144,6 +167,10 @@ class FrozenLake(Environment):
         return state, reward, done
 
     def p(self, next_state, state, action):
+        # initialize transitioning probability
+        self.transitioning_probability = np.zeros((self.n_states, self.n_states, self.n_actions))
+
+
         # TODO:
         if state == next_state or self.lake[state][next_state] == '#':
             return 0
@@ -205,9 +232,22 @@ def play(env):
 ################ Model-based algorithms ################
 
 def policy_evaluation(env, policy, gamma, theta, max_iterations):
-    value = np.zeros(env.n_states, dtype=np.float)
-
+    value = np.zeros(env.n_states, dtype=np.float) # create array size of n_states of type numpy float
     # TODO:
+    current_iteration = 0  # initialisaton of iterations
+
+    while current_iteration < max_iterations:
+        delta = 0
+        for current_state in range(env.n_states):  # for all the current states in n_states
+            current_value = value[current_state]
+            # sum of probability * (reward+discount_factor*value)
+            value[current_state] = sum([env.p(next_state, current_state, policy[current_state]) * (env.r(next_state, current_state, policy[current_state]) + gamma * value[next_state]) for next_state in
+                             range(env.n_states)])
+            # delta will get the maximum value between current delta or measure of change in values
+            delta = max(delta, abs(current_value - value[current_state]))
+        if delta < theta:
+            break
+        current_iteration += 1
 
     return value
 
