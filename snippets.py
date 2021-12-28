@@ -96,8 +96,6 @@ class FrozenLake(Environment):
         self.absorbing_state = self.n_states - 1
         
         # TODO:
-        self.lake_cordinates = np.arange(0,self.lake.shape[0]*self.lake.shape[1]).reshape(self.lake.shape)
-        
         self.max_steps = max_steps
         self.random_state = np.random.RandomState(seed)
 
@@ -105,10 +103,10 @@ class FrozenLake(Environment):
         self.goal = np.where(self.lake_flat == "$")[0]
         
         self.transaction_probabilties = np.zeros((self.n_states,self.n_states,self.n_actions))
-        for state in range(0,self.n_states-1):
-            for action in range(0,self.n_actions):
-                next_state = self.get_valid_next_state(state,action)[1]
-                if state in self.goal or state==self.absorbing_state:
+        for state in range(self.n_states):
+            for action in range(self.n_actions):
+                next_state = self.get_valid_next_state(state,action)
+                if state in self.goal:
                     self.transaction_probabilties[self.absorbing_state,state,action] = 1
                 else:
                     self.transaction_probabilties[next_state,state,action] += 1 - self.slip 
@@ -116,30 +114,31 @@ class FrozenLake(Environment):
                         self.transaction_probabilties[next_state, state, i] += (self.slip/self.n_actions)
 
     def get_valid_next_state(self, state, action):
-        state_pos = np.where(self.lake_cordinates==state)
-        if action == 0:#up
-            if state_pos[0][0] - 1 >= 0 and state not in self.holes:
-                return True, state - self.lake.shape[0] 
+        if action == 0 and state < self.n_states - 1  and state not in self.holes:#up
+            if state - self.lake.shape[0] >= 0:
+                return state - self.lake.shape[0] 
             else:
-                return False, state
+                return state
 
-        if action == 1:#left
-            if state_pos[1][0] - 1 >= 0  and state not in self.holes:
-                return True, state - 1 
+        if action == 1 and state < self.n_states - 1  and state not in self.holes:#left
+            if state - self.lake.shape[0] >= 0 and state % self.lake.shape[0]!=0:
+                return state - 1 
             else:
-                return False, state
+                return state
 
-        if action == 2:#down
-            if state_pos[0][0] + 1 > self.lake.shape[0]  and state not in self.holes:
-                return True, state + self.lake.shape[0] 
+        if action == 2 and state < self.n_states - 1  and state not in self.holes:#down
+            if state + self.lake.shape[0] < self.n_states - 1:
+                return state + self.lake.shape[0] 
             else:
-                return False, state
+                return state
 
-        if action == 3:#right
-            if state_pos[1][0] + 1 > self.lake.shape[1]  and state not in self.holes:
-                return True, state + 1 
+        if action == 3 and state < self.n_states - 1  and state not in self.holes:#right
+            if state + self.lake.shape[0] >= 0 and (state+1) % self.lake.shape[0]!=0:
+                return state + 1 
             else:
-                return False, state
+                return state
+        
+        return state
 
     def step(self, action):
         state, reward, done = Environment.step(self, action)
@@ -154,7 +153,7 @@ class FrozenLake(Environment):
     
     def r(self, next_state, state, action):
         # TODO:
-        if next_state in self.goal and state not in self.absorbing_states and self.valid_next_state(state,action)[0]:
+        if next_state in self.goal:
             return 1
         else:
             return 0
@@ -263,11 +262,8 @@ def sarsa(env, max_episodes, eta, gamma, epsilon, seed=None):
         s = env.reset()
         # TODO:
 
-        best_action = None
-        curr_action = None
-    
         #e-greedy policy
-        if epsilon[i] > np.random.rand(1)[0]:
+        if epsilon[i] > np.random.rand() or max(q[s]) == 0:
             curr_action = np.random.choice(env.n_actions)
         else:
             curr_action= np.argmax(q[s]) 
@@ -280,13 +276,13 @@ def sarsa(env, max_episodes, eta, gamma, epsilon, seed=None):
             next_state, next_reward, done = env.step(curr_action)  
 
             #e-greedy policy
-            if epsilon[i] > np.random.rand():
+            if epsilon[i] > np.random.rand() or max(q[s]) == 0:
                 best_action = np.random.choice(env.n_actions)
             else:
                 best_action = np.argmax(q[next_state])   
 
             #updating q values
-            q[s][curr_action] = q[s][curr_action] + eta[i] * (next_reward + gamma * q[next_state][best_action] - q[s][curr_action])
+            q[s,curr_action] = q[s,curr_action] + eta[i] * (next_reward + gamma * q[next_state,best_action] - q[s,curr_action])
 
             #updating current state and action
             s = next_state
@@ -309,13 +305,11 @@ def q_learning(env, max_episodes, eta, gamma, epsilon, seed=None):
         s = env.reset()
         # TODO:
 
-        curr_action = None
-
         done = False
         while not done:
 
             #e-greedy policy
-            if epsilon[i] > np.random.rand(1)[0]:
+            if epsilon[i] > np.random.rand() or max(q[s]) == 0:
                 curr_action = np.random.choice(env.n_actions)
             else:
                 curr_action = np.argmax(q[s])  
@@ -326,7 +320,7 @@ def q_learning(env, max_episodes, eta, gamma, epsilon, seed=None):
             best_action = np.argmax(q[next_state])
 
             #updating q values
-            q[s][curr_action] = q[s][curr_action] + eta[i] * (next_reward + gamma * q[next_state][best_action] - q[s][curr_action])
+            q[s,curr_action] = q[s,curr_action] + eta[i] * (next_reward + gamma * q[next_state,best_action] - q[s,curr_action])
 
             #updating current state and action
             s = next_state
@@ -392,12 +386,9 @@ def linear_sarsa(env, max_episodes, eta, gamma, epsilon, seed=None):
         q = features.dot(theta)
 
         # TODO:
-
-        best_action = None
-        curr_action = None
-    
+        
         #e-greedy policy
-        if epsilon[i] > np.random.rand(1)[0]:
+        if 1 - epsilon[i] > np.random.rand() or max(q) == 0:
             curr_action = np.random.choice(env.n_actions)
         else:
             curr_action= np.argmax(q) 
@@ -409,22 +400,21 @@ def linear_sarsa(env, max_episodes, eta, gamma, epsilon, seed=None):
             #updating feature variable
             next_feature, next_reward, done = env.step(curr_action)
 
-            #e-greedy policy
-            if epsilon[i] > np.random.rand(1)[0]:
-                best_action = np.random.choice(env.n_actions)
-            else:
-                best_action = np.argmax(q)      
-
-
             #updating delta
-            delta = next_reward - q[best_action]
+            delta = next_reward - q[curr_action]
 
             #updating q
             q = next_feature.dot(theta)
 
+            #e-greedy policy
+            if 1 - epsilon[i] > np.random.rand():
+                best_action = np.random.choice(env.n_actions)
+            else:
+                best_action = np.argmax(q)      
+
             #updating delta and theta
             delta = delta + gamma * q[best_action]
-            theta = theta + eta[i] * delta * features[best_action]
+            theta = theta + eta[i] * delta * features[curr_action]
 
             features = next_feature
             curr_action = best_action
@@ -445,13 +435,12 @@ def linear_q_learning(env, max_episodes, eta, gamma, epsilon, seed=None):
         q = features.dot(theta)
 
         # TODO:
-        curr_action = None
-    
+        
         done = False
         while not done:
 
             #e-greedy policy
-            if epsilon[i] > np.random.rand(1)[0]:
+            if epsilon[i] > np.random.rand(1)[0] or max(q) == 0:
                 curr_action = np.random.choice(env.n_actions)
             else:
                 curr_action = np.argmax(q)      
