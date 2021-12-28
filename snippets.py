@@ -103,7 +103,7 @@ class FrozenLake(Environment):
         # TODO:
         # call parent constructor
         Environment.__init__(self, self.n_states, self.n_actions, max_steps, pi, seed)
-        self.actions = ['w', 'a', 's', 'd']
+        self.actions = ['0', '1', '2', '3']
         # Matrix with lake shape initialized
         self.reward_map = np.zeros(self.lake.shape, dtype=np.float)
         # goal state setting to 1
