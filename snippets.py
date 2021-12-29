@@ -1,5 +1,4 @@
 ################ Environment ################
-from itertools import product
 
 import numpy as np
 import contextlib
@@ -18,7 +17,7 @@ def _printoptions(*args, **kwargs):
 
 # importing probaabilty data
 # prob = np.load('p.npy')
-# print(prob.shape)
+# print(prob)
 
 class EnvironmentModel:
     def __init__(self, n_states, n_actions, seed=None):
@@ -73,7 +72,7 @@ class Environment(EnvironmentModel):
 
 
 class FrozenLake(Environment):
-    def __init__(self, lake, slip, max_steps, seed=None, action=None):
+    def __init__(self, lake, slip, max_steps, seed=None):
         """
         lake: A matrix that represents the lake. For example:
         lake =  [['&', '.', '.', '.'],
@@ -84,8 +83,6 @@ class FrozenLake(Environment):
         max_steps: The maximum number of time steps in an episode
         seed: A seed to control the random number generator (optional)
         """
-        pnpy = np.load('p.npy')
-        print(pnpy)
         # start (&), frozen (.), hole (#), goal ($)
         self.lake = np.array(lake)
         self.lake_flat = self.lake.reshape(-1)
@@ -95,69 +92,55 @@ class FrozenLake(Environment):
         self.n_states = self.lake.size + 1
         self.n_actions = 4
 
-        pi = np.zeros(self.n_states, dtype=float)
-        pi[np.where(self.lake_flat == '&')[0]] = 1.0
+        self.pi = np.zeros(self.n_states, dtype=float)
+        self.pi[np.where(self.lake_flat == '&')[0]] = 1.0
 
         self.absorbing_state = self.n_states - 1
 
         # TODO:
-        # call parent constructor
-        Environment.__init__(self, self.n_states, self.n_actions, max_steps, pi, seed)
-        self.actions = ['0', '1', '2', '3']
-        # Matrix with lake shape initialized
-        self.reward_map = np.zeros(self.lake.shape, dtype=np.float)
-        # goal state setting to 1
-        self.reward_map[np.where(self.lake == '$')] = 1
-        # Matrix with absorbing state initialized.
-        self.absorbing_state = np.zeros(self.lake.shape, dtype=np.float)
-        # Set goal state and holes as 1
-        self.absorbing_state[np.where(self.lake == '$')] = 1
-        self.absorbing_state[np.where(self.lake == '#')] = 1
+        self.max_steps = max_steps
+        self.random_state = np.random.RandomState(seed)
 
-        self.index_to_coordinates = list(product(range(self.reward_map.shape[0]), range(self.reward_map.shape[1])))
-        self.coordinates_to_index = {s: i for (i, s) in enumerate(self.index_to_coordinates)}
+        self.holes = np.where(self.lake_flat == "#")[0]
+        self.goal = np.where(self.lake_flat == "$")[0]
 
-        hole = np.where(self.lake_flat == "#")[0]
-        self.goal = np.where(self.lake_flat == "$")
-
-        # Checks to keep agent in the grid, so that it doesn't leave the grid
-        def movement(row, column, action):
-            # upward movement
-            if action == 0:
-                row = max(row - 1, 0)
-            # left movement
-            elif action == 1:
-                column = max(column - 1, 0)
-            # downward movement
-            elif action == 2:
-                row = min(row + 1, self.lake.shape[0] - 1)
-            # Right movement
-            elif action == 3:
-                column = min(column + 1, self.lake.shape[1] - 1)
-            return row, column
-
-        def new_matrix(row, column, action):
-
-            # grid check for next grid coordinates
-            new_row, new_column = movement(row, column, action)
-            # Change coordinates to index
-            state_next = self.coordinates_to_index[(new_row, new_column)]
-            # Get new coordinate type
-            coordinate_type = self.lake[row][column]
-            # Check whether we reached the goal or fell in hole
-            done = coordinate_type == '$' or coordinate_type == '#'
-            # if agent is at goal ($), reward = 1 else it is  0
-            reward = float(coordinate_type == '$')
-            return state_next, reward, done
-
+        self.transaction_probabilties = np.zeros((self.n_states, self.n_states, self.n_actions))
         for state in range(self.n_states):
-            if state == self.absorbing_state or state in hole or state in self.goal:
-                self.transitioning_probability[self.absorbing_state, state, action] = 1
+            for action in range(self.n_actions):
+                next_state = self.get_valid_next_state(state, action)
+                if state in self.goal:
+                    self.transaction_probabilties[self.absorbing_state, state, action] = 1
+                else:
+                    self.transaction_probabilties[next_state, state, action] += 1 - self.slip
+                    for i in range(self.n_actions):
+                        self.transaction_probabilties[next_state, state, i] += (self.slip / self.n_actions)
 
+    def get_valid_next_state(self, state, action):
+        if action == 0 and state < self.n_states - 1 and state not in self.holes:  # up
+            if state - self.lake.shape[0] >= 0:
+                return state - self.lake.shape[0]
+            else:
+                return state
 
+        if action == 1 and state < self.n_states - 1 and state not in self.holes:  # left
+            if state - self.lake.shape[0] >= 0 and state % self.lake.shape[0] != 0:
+                return state - 1
+            else:
+                return state
 
+        if action == 2 and state < self.n_states - 1 and state not in self.holes:  # down
+            if state + self.lake.shape[0] < self.n_states - 1:
+                return state + self.lake.shape[0]
+            else:
+                return state
 
+        if action == 3 and state < self.n_states - 1 and state not in self.holes:  # right
+            if state + self.lake.shape[0] >= 0 and (state + 1) % self.lake.shape[0] != 0:
+                return state + 1
+            else:
+                return state
 
+        return state
 
     def step(self, action):
         state, reward, done = Environment.step(self, action)
@@ -167,21 +150,12 @@ class FrozenLake(Environment):
         return state, reward, done
 
     def p(self, next_state, state, action):
-        # initialize transitioning probability
-        self.transitioning_probability = np.zeros((self.n_states, self.n_states, self.n_actions))
-
-
         # TODO:
-        if state == next_state or self.lake[state][next_state] == '#':
-            return 0
-        elif self.lake[state][next_state] == '$':
-            return 1
-        else:
-            return 0.5
+        return self.transaction_probabilties[next_state, state, action]
 
     def r(self, next_state, state, action):
         # TODO:
-        if self.lake[state][next_state] == '$':
+        if next_state in self.goal:
             return 1
         else:
             return 0
@@ -232,7 +206,8 @@ def play(env):
 ################ Model-based algorithms ################
 
 def policy_evaluation(env, policy, gamma, theta, max_iterations):
-    value = np.zeros(env.n_states, dtype=np.float) # create array size of n_states of type numpy float
+    value = np.zeros(env.n_states, dtype=np.float)
+
     # TODO:
     current_iteration = 0  # initialisaton of iterations
 
@@ -241,8 +216,9 @@ def policy_evaluation(env, policy, gamma, theta, max_iterations):
         for current_state in range(env.n_states):  # for all the current states in n_states
             current_value = value[current_state]
             # sum of probability * (reward+discount_factor*value)
-            value[current_state] = sum([env.p(next_state, current_state, policy[current_state]) * (env.r(next_state, current_state, policy[current_state]) + gamma * value[next_state]) for next_state in
-                             range(env.n_states)])
+            value[current_state] = sum([env.p(next_state, current_state, policy[current_state]) * (
+                        env.r(next_state, current_state, policy[current_state]) + gamma * value[next_state]) for
+                                        next_state in range(env.n_states)])
             # delta will get the maximum value between current delta or measure of change in values
             delta = max(delta, abs(current_value - value[current_state]))
         if delta < theta:
@@ -292,41 +268,35 @@ def sarsa(env, max_episodes, eta, gamma, epsilon, seed=None):
 
     q = np.zeros((env.n_states, env.n_actions))
 
-    actions = [0, 1, 2, 3]
-    """"
-    0=up
-    1=left
-    s=down
-    d=right
-    """
-    best_action = None
-
     for i in range(max_episodes):
         s = env.reset()
         # TODO:
 
         # e-greedy policy
-        if epsilon[i] > np.random.rand(1)[0]:
-            best_action = np.random(actions)
+        if epsilon[i] > np.random.rand() or max(q[s]) == 0:
+            curr_action = np.random.choice(env.n_actions)
         else:
-            best_action = np.argmax(env.p(s, random_state, actions[i]) for i in actions)
+            curr_action = np.argmax(q[s])
 
-        state1, reward1, done = env.step(best_action)
-        while done:
-
-            # e-greedy policy
-            if epsilon[i] > np.random.rand(1)[0]:
-                best_action = np.random(actions)
-            else:
-                best_action = np.argmax(env.p(s, random_state, actions[i]) for i in actions)
-
-                # updating q values
-            for j in range(env.n_states):
-                for k in range(env.n_actions):
-                    q[j][k] = q[j][k] + eta[i] * (reward1 + gamma * q[state1][best_action] - q[j][k])
+        done = False
+        while not done:
 
             # updating state variable
-            state1, reward1, done = env.step(best_action)
+            next_state, next_reward, done = env.step(curr_action)
+
+            # e-greedy policy
+            if epsilon[i] > np.random.rand() or max(q[s]) == 0:
+                best_action = np.random.choice(env.n_actions)
+            else:
+                best_action = np.argmax(q[next_state])
+
+                # updating q values
+            q[s, curr_action] = q[s, curr_action] + eta[i] * (
+                        next_reward + gamma * q[next_state, best_action] - q[s, curr_action])
+
+            # updating current state and action
+            s = next_state
+            curr_action = best_action
 
     policy = q.argmax(axis=1)
     value = q.max(axis=1)
@@ -342,35 +312,30 @@ def q_learning(env, max_episodes, eta, gamma, epsilon, seed=None):
 
     q = np.zeros((env.n_states, env.n_actions))
 
-    actions = [0, 1, 2, 3]
-    """"
-    0=up
-    1=left
-    2=down
-    3=right
-    """
-    action = None
-    done = False
-
     for i in range(max_episodes):
         s = env.reset()
         # TODO:
 
+        done = False
         while not done:
+
             # e-greedy policy
-            if epsilon[i] > np.random.rand(1)[0]:
-                action = np.random(actions)
+            if epsilon[i] > np.random.rand() or max(q[s]) == 0:
+                curr_action = np.random.choice(env.n_actions)
             else:
-                action = np.argmax(env.p(s, random_state, actions[i]) for i in actions)
+                curr_action = np.argmax(q[s])
 
-            # Get the observations after taking the action
-            state1, reward1, done = env.step(action)
+                # updating state variable
+            next_state, next_reward, done = env.step(curr_action)
 
-            best_next_action = np.argmax(q[state1])
-            # Updating q value
-            q[s][action] = q[s][action] + eta[i] * (reward1 + gamma * q[state1][best_next_action] - q[s][action])
+            best_action = np.argmax(q[next_state])
 
-            state = state1
+            # updating q values
+            q[s, curr_action] = q[s, curr_action] + eta[i] * (
+                        next_reward + gamma * q[next_state, best_action] - q[s, curr_action])
+
+            # updating current state and action
+            s = next_state
 
     policy = q.argmax(axis=1)
     value = q.max(axis=1)
@@ -429,49 +394,43 @@ def linear_sarsa(env, max_episodes, eta, gamma, epsilon, seed=None):
 
     theta = np.zeros(env.n_features)
 
-    actions = [0, 1, 2, 3]
-    """"
-    0=up
-    1=left
-    s=down
-    d=right
-    """
-    best_action = None
-
     for i in range(max_episodes):
         features = env.reset()
 
         q = features.dot(theta)
 
         # TODO:
+
         # e-greedy policy
-        if epsilon[i] > np.random.rand(1)[0]:
-            best_action = np.random(actions)
+        if 1 - epsilon[i] > np.random.rand() or max(q) == 0:
+            curr_action = np.random.choice(env.n_actions)
         else:
-            best_action = np.argmax(env.p(s, random_state, actions[i]) for i in actions)
+            curr_action = np.argmax(q)
 
-        state1, reward1, done = env.step(best_action)
-        while done:
+        done = False
+        while not done:
 
-            # e-greedy policy
-            if epsilon[i] > np.random.rand(1)[0]:
-                best_action = np.random(actions)
-            else:
-                best_action = np.argmax(env.p(s, random_state, actions[i]) for i in actions)
+            # updating feature variable
+            next_feature, next_reward, done = env.step(curr_action)
 
-                # updating delta
-            delta = reward1 - q(best_action)
+            # updating delta
+            delta = next_reward - q[curr_action]
 
             # updating q
-            q = state1.dot(theta)
+            q = next_feature.dot(theta)
 
-            # updating delta and theta
+            # e-greedy policy
+            if 1 - epsilon[i] > np.random.rand():
+                best_action = np.random.choice(env.n_actions)
+            else:
+                best_action = np.argmax(q)
+
+                # updating delta and theta
             delta = delta + gamma * q[best_action]
+            theta = theta + eta[i] * delta * features[curr_action]
 
-            theta[i] = theta[i] + eta[i] * delta * state1
-
-            # updating state variable
-            state1, reward1, done = env.step(best_action)
+            features = next_feature
+            curr_action = best_action
 
     return theta
 
@@ -487,7 +446,33 @@ def linear_q_learning(env, max_episodes, eta, gamma, epsilon, seed=None):
     for i in range(max_episodes):
         features = env.reset()
 
+        q = features.dot(theta)
+
         # TODO:
+
+        done = False
+        while not done:
+
+            # e-greedy policy
+            if epsilon[i] > np.random.rand(1)[0] or max(q) == 0:
+                curr_action = np.random.choice(env.n_actions)
+            else:
+                curr_action = np.argmax(q)
+
+                # updating feature variable
+            next_feature, next_reward, done = env.step(curr_action)
+
+            # updating delta
+            delta = next_reward - q[curr_action]
+
+            # updating q
+            q = next_feature.dot(theta)
+
+            # updating delta and theta
+            delta = delta + gamma * np.max(q)
+            theta = theta + eta[i] * delta * features[curr_action]
+
+            features = next_feature
 
     return theta
 
