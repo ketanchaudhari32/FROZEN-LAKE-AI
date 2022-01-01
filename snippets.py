@@ -202,32 +202,31 @@ def play(env):
 ################ Model-based algorithms ################
 
 def policy_evaluation(env, policy, gamma, theta, max_iterations):
-    value = np.zeros(env.n_states, dtype=np.float)
+    value = np.zeros(env.n_states, dtype=float)
 
     # TODO:
-    for _ in range(max_iterations,0,-1):
+    while max_iterations:
         delta = 0
         for current_state in range(env.n_states):  # for all the current states in n_states
-            for next_state in range(env.n_states):
-                current_value = value[current_state]
-                # sum of probability * (reward+discount_factor*value)
-                value[current_state] = sum([env.p(next_state, current_state, policy[current_state]) * (env.r(next_state, current_state, policy[current_state]) + gamma * value[next_state])])
-                # delta will get the maximum value between current delta or measure of change in values
-                delta = max(delta, abs(current_value - value[current_state]))
+            current_value = value[current_state]
+            # sum of probability * (reward+discount_factor*value)
+            value[current_state] = sum([env.p(next_state, current_state, policy[current_state]) * (env.r(next_state, current_state, policy[current_state]) + gamma * value[next_state]) for next_state in range(env.n_states)])
+            # delta will get the maximum value between current delta or measure of change in values
+            delta = max(delta, abs(current_value - value[current_state]))
         if delta < theta:
             break
-
+        max_iterations -= 1
     return value
     
 def policy_improvement(env, value, gamma):
     policy = np.zeros(env.n_states, dtype=int)
     
     # TODO:
-    for s in range(env.n_states):
+    for current_state in range(env.n_states):
         # take sum of p(r+gamma*value) for all possible next states
-        action_values = [np.sum([env.p(next_state, s, action) * (env.r(next_state, s, action) + gamma * value[next_state]) for next_state in range(env.n_states)]) for action in range(env.n_actions)]
+        action_values = [np.sum([env.p(next_state, current_state, action) * (env.r(next_state, current_state, action) + gamma * value[next_state]) for next_state in range(env.n_states)]) for action in range(env.n_actions)]
         # take the argument of the max value for all possible actions
-        policy[s] = np.argmax(action_values)
+        policy[current_state] = np.argmax(action_values)
 
     return policy
     
@@ -238,12 +237,14 @@ def policy_iteration(env, gamma, theta, max_iterations, policy=None):
         policy = np.array(policy, dtype=int)
     
     # TODO:
-    iterations = 0
-    stable = False
-    while not stable:
+    improved = True
+    value = None
+    while improved:
         value = policy_evaluation(env, policy, gamma, theta, max_iterations)
-        policy, stable = policy_improvement(env, policy, value, gamma)
-        iterations = iterations+1  
+        old_policy = policy
+        policy = policy_improvement(env, value, gamma)
+        if np.array_equal(old_policy, policy):
+            improved = False
     return policy, value
     
 def value_iteration(env, gamma, theta, max_iterations, value=None):
@@ -254,18 +255,22 @@ def value_iteration(env, gamma, theta, max_iterations, value=None):
     
     # TODO:
     policy = np.zeros(env.n_states, dtype=int)
-    for _ in range(max_iterations,0,-1):
+    while max_iterations:
+        delta = 0
         for current_state in range(env.n_states):  # for all the current states in n_states
-            for next_state in range(env.n_states):
-                current_value = value[current_state]
-                # sum of probability * (reward+discount_factor*value)
-                action_values = [np.sum([env.p(next_state, current_state, action) * (env.r(next_state, current_state, action) + gamma * value[next_state])]) for action in range(env.n_actions)]
-                value[current_state] = np.argmax(action_values)
-                # delta will get the maximum value between current delta or measure of change in values
-                delta = max(delta, abs(current_value - value[current_state]))
-            policy[current_state] = np.argmax(action_values) 
+            current_value = value[current_state]
+            # sum of probability * (reward+discount_factor*value)
+            action_values = [np.sum([env.p(next_state, current_state, action) * (env.r(next_state, current_state, action) + gamma * value[next_state]) for next_state in range(env.n_states)]) for action in range(env.n_actions)]
+            value[current_state] = np.argmax(action_values)
+            # delta will get the maximum value between current delta or measure of change in values
+            delta = max(delta, abs(current_value - value[current_state])) 
         if delta < theta:
             break
+        max_iterations -= 1
+        
+    for current_state in range(env.n_states):
+        action_values = [np.sum([env.p(next_state, current_state, action) * (env.r(next_state, current_state, action) + gamma * value[next_state]) for next_state in range(env.n_states)]) for action in range(env.n_actions)]
+        policy[current_state] = np.argmax(action_values)  
     return policy, value
 
 ################ Tabular model-free algorithms ################
