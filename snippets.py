@@ -260,8 +260,10 @@ def value_iteration(env, gamma, theta, max_iterations, value=None):
         for current_state in range(env.n_states):  # for all the current states in n_states
             current_value = value[current_state]
             # sum of probability * (reward+discount_factor*value)
-            action_values = [np.sum([env.p(next_state, current_state, action) * (env.r(next_state, current_state, action) + gamma * value[next_state]) for next_state in range(env.n_states)]) for action in range(env.n_actions)]
-            value[current_state] = np.argmax(action_values)
+            action_values = [np.sum([env.p(next_state, current_state, action) * (env.r(next_state, current_state, action) + gamma * value[next_state])
+                                     for next_state in range(env.n_states)])
+                             for action in range(env.n_actions)]
+            value[current_state] = np.max(action_values)
             # delta will get the maximum value between current delta or measure of change in values
             delta = max(delta, abs(current_value - value[current_state])) 
         if delta < theta:
@@ -304,7 +306,8 @@ def sarsa(env, max_episodes, eta, gamma, epsilon, seed=None):
             if epsilon[i] > np.random.rand() or max(q[s]) == 0:
                 best_action = np.random.choice(env.n_actions)
             else:
-                best_action = np.argmax(q[next_state])   
+                #best_action = np.argmax(q[next_state])
+                best_action = np.random.choice(np.flatnonzero(q[next_state] == q[next_state].max()))
 
             #updating q values
             q[s,curr_action] = q[s,curr_action] + eta[i] * (next_reward + gamma * q[next_state,best_action] - q[s,curr_action])
@@ -337,7 +340,7 @@ def q_learning(env, max_episodes, eta, gamma, epsilon, seed=None):
             if epsilon[i] > np.random.rand() or max(q[s]) == 0:
                 curr_action = np.random.choice(env.n_actions)
             else:
-                curr_action = np.argmax(q[s])  
+                curr_action = np.random.choice(np.flatnonzero(q[s] == q[s].max()))
 
             #updating state variable
             next_state, next_reward, done = env.step(curr_action)   
@@ -413,10 +416,11 @@ def linear_sarsa(env, max_episodes, eta, gamma, epsilon, seed=None):
         # TODO:
         
         #e-greedy policy
-        if 1 - epsilon[i] > np.random.rand() or max(q) == 0:
+        if epsilon[i] > np.random.rand() or max(q) == 0:
             curr_action = np.random.choice(env.n_actions)
         else:
-            curr_action= np.argmax(q) 
+            #curr_action= np.argmax(q)
+            curr_action = np.random.choice(np.flatnonzero(q == q.max()))
 
 
         done = False
@@ -432,10 +436,11 @@ def linear_sarsa(env, max_episodes, eta, gamma, epsilon, seed=None):
             q = next_feature.dot(theta)
 
             #e-greedy policy
-            if 1 - epsilon[i] > np.random.rand():
+            if epsilon[i] > np.random.rand():
                 best_action = np.random.choice(env.n_actions)
             else:
-                best_action = np.argmax(q)      
+                #best_action = np.argmax(q)
+                best_action = np.random.choice(np.flatnonzero(q == q.max()))
 
             #updating delta and theta
             delta = delta + gamma * q[best_action]
@@ -468,7 +473,8 @@ def linear_q_learning(env, max_episodes, eta, gamma, epsilon, seed=None):
             if epsilon[i] > np.random.rand(1)[0] or max(q) == 0:
                 curr_action = np.random.choice(env.n_actions)
             else:
-                curr_action = np.argmax(q)      
+                #curr_action = np.argmax(q)
+                curr_action = np.random.choice(np.flatnonzero(q == q.max()))
 
             #updating feature variable
             next_feature, next_reward, done = env.step(curr_action)
@@ -497,6 +503,8 @@ def main():
               ['.', '#', '.', '#'],
               ['.', '.', '.', '#'],
               ['#', '.', '.', '$']]
+
+
 
     env = FrozenLake(lake, slip=0.1, max_steps=16, seed=seed)
     print(env)
