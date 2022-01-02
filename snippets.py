@@ -153,7 +153,7 @@ class FrozenLake(Environment):
     
     def r(self, next_state, state, action):
         # TODO:
-        if next_state in self.goal:
+        if state in self.goal:
             return 1
         else:
             return 0
