@@ -121,7 +121,7 @@ class FrozenLake(Environment):
                 return state
 
         if action == 1 and state < self.n_states - 1  and state not in self.holes:#left
-            if state - self.lake.shape[0] >= 0 and state % self.lake.shape[0]!=0:
+            if state % self.lake.shape[0] != 0:
                 return state - 1 
             else:
                 return state
@@ -133,7 +133,7 @@ class FrozenLake(Environment):
                 return state
 
         if action == 3 and state < self.n_states - 1  and state not in self.holes:#right
-            if state + self.lake.shape[0] >= 0 and (state+1) % self.lake.shape[0]!=0:
+            if (state+1) % self.lake.shape[0] != 0:
                 return state + 1 
             else:
                 return state
