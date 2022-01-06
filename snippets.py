@@ -219,6 +219,8 @@ def policy_evaluation(env, policy, gamma, theta, max_iterations):
             value[current_state] = sum([env.p(next_state, current_state, policy[current_state]) * (env.r(next_state, current_state, policy[current_state]) + gamma * value[next_state]) for next_state in range(env.n_states)])
             # delta will get the maximum value between current delta or measure of change in values
             delta = max(delta, abs(current_value - value[current_state]))
+
+        # Stop if delta is less than a certain tolerance theta
         if delta < theta:
             break
     return value
@@ -250,9 +252,10 @@ def policy_iteration(env, gamma, theta, max_iterations, policy=None):
         old_policy = policy
         # Improve policy
         policy = policy_improvement(env, value, gamma)
-        # Check if any improvement seen
+        # Check if any improvement seen, and set the improved flag to False if no improvement is seen
         if np.array_equal(old_policy, policy):
             improved = False
+
     # Return optimal policy, and value
     return policy, value
     
@@ -275,7 +278,7 @@ def value_iteration(env, gamma, theta, max_iterations, value=None):
             value[current_state] = np.max(action_values)
             # delta will get the maximum value between current delta or measure of change in values
             delta = max(delta, abs(current_value - value[current_state]))
-        # Stop if delta is less than a certain threshold theta
+        # Stop if delta is less than a certain tolerance theta
         if delta < theta:
             break
 
