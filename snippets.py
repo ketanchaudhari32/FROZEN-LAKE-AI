@@ -303,7 +303,7 @@ def sarsa(env, max_episodes, eta, gamma, epsilon, seed=None):
 
 
         # Use e-greedy policy
-        if epsilon[i] > np.random.uniform(0, 1):
+        if epsilon[i] > np.random.rand(1)[0]:
             # Choose random action for exploration
             curr_action = np.random.choice(env.n_actions)
         else:
@@ -316,7 +316,7 @@ def sarsa(env, max_episodes, eta, gamma, epsilon, seed=None):
             # Get the next state, reward and done using step function
             next_state, next_reward, done = env.step(curr_action)  
             # Use e-greedy policy
-            if epsilon[i] > np.random.uniform(0, 1):
+            if epsilon[i] > np.random.rand(1)[0]:
                 # Choose random action for exploration
                 best_action = np.random.choice(env.n_actions)
             else:
@@ -352,7 +352,7 @@ def q_learning(env, max_episodes, eta, gamma, epsilon, seed=None):
         while not done:
 
             # Use e-greedy policy
-            if epsilon[i] > np.random.uniform(0, 1):
+            if epsilon[i] > np.random.rand(1)[0]:
                 # Choose random action for exploration
                 curr_action = np.random.choice(env.n_actions)
             else:
@@ -432,7 +432,7 @@ def linear_sarsa(env, max_episodes, eta, gamma, epsilon, seed=None):
         q = features.dot(theta)
 
         # Use e-greedy policy
-        if epsilon[i] > np.random.uniform(0, 1):
+        if epsilon[i] > np.random.rand(1)[0]:
             # Choose random action for exploration
             curr_action = np.random.choice(env.n_actions)
         else:
@@ -452,7 +452,7 @@ def linear_sarsa(env, max_episodes, eta, gamma, epsilon, seed=None):
             q = next_feature.dot(theta)
 
             # Use e-greedy policy
-            if epsilon[i] > np.random.uniform(0, 1):
+            if epsilon[i] > np.random.rand(1)[0]:
                 # Choose random action for exploration
                 action = np.random.choice(env.n_actions)
             else:
@@ -485,7 +485,7 @@ def linear_q_learning(env, max_episodes, eta, gamma, epsilon, seed=None):
         while not done:
 
             # Use e-greedy policy
-            if epsilon[i] > np.random.uniform(0, 1):
+            if epsilon[i] > np.random.rand(1)[0]:
                 # Choose random action for exploration
                 curr_action = np.random.choice(env.n_actions)
             else:
@@ -554,13 +554,13 @@ def main():
     print('')
     
     print('# Model-free algorithms')
-    # max_episodes = 2000
-    # eta = 0.5
-    # epsilon = 0.5
+    max_episodes = 2000
+    eta = 0.5
+    epsilon = 0.5
 
-    max_episodes = 5000
-    eta = 0.8
-    epsilon = 0.9
+    # max_episodes = 5000
+    # eta = 0.8
+    # epsilon = 0.9
     
     print('')
     
