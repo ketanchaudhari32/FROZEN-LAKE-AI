@@ -351,7 +351,7 @@ def q_learning(env, max_episodes, eta, gamma, epsilon, seed=None):
         done = False
         while not done:
 
-            #e-greedy policy
+            # Use e-greedy policy
             if epsilon[i] > np.random.uniform(0, 1):
                 # Choose random action for exploration
                 curr_action = np.random.choice(env.n_actions)
@@ -481,12 +481,10 @@ def linear_q_learning(env, max_episodes, eta, gamma, epsilon, seed=None):
         
         q = features.dot(theta)
 
-        # TODO:
-        
         done = False
         while not done:
 
-            #e-greedy policy
+            # Use e-greedy policy
             if epsilon[i] > np.random.uniform(0, 1):
                 # Choose random action for exploration
                 curr_action = np.random.choice(env.n_actions)
