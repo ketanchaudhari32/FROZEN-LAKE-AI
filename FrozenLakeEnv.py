@@ -51,8 +51,8 @@ class FrozenLake(Environment):
             for action in range(self.n_actions):
                 # Get the valid next state
                 next_state = self.get_valid_next_state(state,action)
-                # If current state is goal or hole state, any action will lead to absorbing state.
-                if state in self.goal or state in self.holes:
+                # If current state is goal/hole/absorbing state, any action will lead to absorbing state.
+                if state in self.goal or state in self.holes or state == self.absorbing_state:
                     self.transaction_probabilties[self.absorbing_state,state,action] = 1
                 # Else calculate the probability according to the slip probability
                 else:
