@@ -39,7 +39,7 @@ def main():
     print('')
     
     print('# Model-free algorithms')
-    max_episodes = 2000
+    max_episodes = 50000
     eta = 0.5
     epsilon = 0.5
 
