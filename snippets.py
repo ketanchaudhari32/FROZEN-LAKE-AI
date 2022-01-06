@@ -13,9 +13,9 @@ def _printoptions(*args, **kwargs):
     finally: 
         np.set_printoptions(**original)
 
-#importing probaabilty data
-#prob = np.load('p.npy')
-#print(prob)
+#importing probability data
+prob = np.load('p.npy')
+print(prob)
 
 class EnvironmentModel:
     def __init__(self, n_states, n_actions, seed=None):
@@ -117,6 +117,11 @@ class FrozenLake(Environment):
                     for i in range(self.n_actions):
                         self.transaction_probabilties[next_state, state, i] += (self.slip/self.n_actions)
 
+        #print('Transition probabilities:')
+        #print(self.transaction_probabilties)
+        #for i in range(0, 16):
+        #    print (np.array_equal(prob[i], self.transaction_probabilties[i]))
+        #print(prob - self.transaction_probabilties)
     # Find the next valid state based on any action up, left, down or right
     # If an action leads to going out of the grid, then return the current state itself, otherwise return the appropriate next state
     def get_valid_next_state(self, state, action):
@@ -246,7 +251,9 @@ def policy_iteration(env, gamma, theta, max_iterations, policy=None):
     # Implement the policy iteration logic
     improved = True
     value = None
+    iteration_count = 0
     while improved:
+        iteration_count += 1
         # Evaluate policy
         value = policy_evaluation(env, policy, gamma, theta, max_iterations)
         old_policy = policy
@@ -256,6 +263,11 @@ def policy_iteration(env, gamma, theta, max_iterations, policy=None):
         if np.array_equal(old_policy, policy):
             improved = False
 
+        # If max iterations count is reached, then break out of the loop
+        if iteration_count >= max_iterations:
+            break
+
+    print('Policy iteration: iterations count : ' + str(iteration_count))
     # Return optimal policy, and value
     return policy, value
     
@@ -289,6 +301,8 @@ def value_iteration(env, gamma, theta, max_iterations, value=None):
         action_values = [np.sum([env.p(next_state, current_state, action) * (env.r(next_state, current_state, action) + gamma * value[next_state]) for next_state in range(env.n_states)]) for action in range(env.n_actions)]
         policy[current_state] = np.argmax(action_values)
 
+
+    print("Value iteration : iterations count " + str(max_iterations))
     return policy, value
 
 ################ Tabular model-free algorithms ################
@@ -376,7 +390,7 @@ def q_learning(env, max_episodes, eta, gamma, epsilon, seed=None):
             
     policy = q.argmax(axis=1)
     value = q.max(axis=1)
-        
+
     return policy, value
 
 ################ Non-tabular model-free algorithms ################
@@ -557,13 +571,13 @@ def main():
     print('')
     
     print('# Model-free algorithms')
-    max_episodes = 2000
-    eta = 0.5
-    epsilon = 0.5
+    # max_episodes = 2000
+    # eta = 0.5
+    # epsilon = 0.5
 
-    # max_episodes = 5000
-    # eta = 0.8
-    # epsilon = 0.9
+    max_episodes = 5000
+    eta = 0.8
+    epsilon = 0.4
     
     print('')
     

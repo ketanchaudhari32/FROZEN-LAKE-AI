@@ -65,7 +65,7 @@
       <workItem from="1640611396394" duration="14263000" />
       <workItem from="1640966236449" duration="336000" />
       <workItem from="1641123902092" duration="28211000" />
-      <workItem from="1641475695508" duration="4082000" />
+      <workItem from="1641475695508" duration="12564000" />
     </task>
     <servers />
   </component>
@@ -100,18 +100,25 @@
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/snippets.py</url>
-          <line>365</line>
+          <line>379</line>
           <option name="timeStamp" value="12" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/snippets.py</url>
+          <line>120</line>
+          <option name="timeStamp" value="13" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
     <watches-manager>
       <configuration name="PythonConfigurationType">
         <watch expression="np.random.rand()" />
+        <watch expression="prob" />
+        <watch expression="self.transaction_probabilties" />
       </configuration>
     </watches-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/snippets_py$snippets.coverage" NAME="snippets Coverage Results" MODIFIED="1641148992189" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/snippets_py$snippets.coverage" NAME="snippets Coverage Results" MODIFIED="1641490915565" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
