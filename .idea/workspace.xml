@@ -3,7 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="9b5081d2-c57d-42a2-ba6d-ffbd2c55cefe" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/snippets.py" beforeDir="false" afterPath="$PROJECT_DIR$/snippets.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ModelBasedAlgo.py" beforeDir="false" afterPath="$PROJECT_DIR$/ModelBasedAlgo.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -23,6 +23,7 @@
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RunManager">
@@ -66,6 +67,7 @@
       <workItem from="1640966236449" duration="336000" />
       <workItem from="1641123902092" duration="28211000" />
       <workItem from="1641475695508" duration="12564000" />
+      <workItem from="1641496953022" duration="4966000" />
     </task>
     <servers />
   </component>
