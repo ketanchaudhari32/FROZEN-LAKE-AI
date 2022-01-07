@@ -9,6 +9,7 @@ def policy_evaluation(env, policy, gamma, theta, max_iterations):
         for current_state in range(env.n_states):  # for all the current states in n_states
             current_value = value[current_state]
             # sum of probability * (reward+discount_factor*value)
+            # Since the policy is deterministic, we consider best action policy[current_state]
             value[current_state] = sum([env.p(next_state, current_state, policy[current_state]) * (env.r(next_state, current_state, policy[current_state]) + gamma * value[next_state]) for next_state in range(env.n_states)])
             # delta will get the maximum value between current delta or measure of change in values
             delta = max(delta, abs(current_value - value[current_state]))
