@@ -3,6 +3,7 @@ import TablularModelFreeAlgo
 import ModelBasedAlgo
 import FrozenLakeEnv
 from LinearWrapper import LinearWrapper
+import numpy as np
 
 def main():
     seed = 0
@@ -26,6 +27,10 @@ def main():
     policy, value = ModelBasedAlgo.policy_iteration(env, gamma, theta, max_iterations)
     env.render(policy, value)
     
+    #storing value and policy from policy iteration for comparing optimal policy with sarsa output
+    best_value = value  
+    best_policy = policy
+    
     print('')
     
     print('## Value iteration')
@@ -43,15 +48,39 @@ def main():
     print('')
     
     print('## Sarsa')
+
+    #to check optimal policy
+    # for i in range(0,max_episodes, 10):
+    #     policy, value = TablularModelFreeAlgo.sarsa(env, i, eta, gamma, epsilon, seed=seed)
+    #     #new_value = ModelBasedAlgo.policy_evaluation(env, policy, gamma, theta, max_iterations)
+    #     if np.array_equal(best_policy, policy):
+    #         #print(policy,value)
+    #         print('Sarsa optimal policy on episode: ',i)
+    #         env.render(policy, value)
+    #         break
+    #     if i==max_episodes-10:
+    #         env.render(policy, value)
+
     policy, value = TablularModelFreeAlgo.sarsa(env, max_episodes, eta, gamma, epsilon, seed=seed)
     env.render(policy, value)
-    
     print('')
     
     print('## Q-learning')
+
+    #to check optimal policy
+    # for i in range(0,max_episodes, 10):
+    #     policy, value = TablularModelFreeAlgo.q_learning(env, i, eta, gamma, epsilon, seed=seed)
+    #     #new_value = ModelBasedAlgo.policy_evaluation(env, policy, gamma, theta, max_iterations)
+    #     if np.array_equal(best_policy, policy):
+    #         #print(policy,value)
+    #         print('Qlearning optimal policy on episode: ',i)
+    #         env.render(policy, value)
+    #         break
+    #     if i==max_episodes-10:
+    #        env.render(policy, value)
+
     policy, value = TablularModelFreeAlgo.q_learning(env, max_episodes, eta, gamma, epsilon, seed=seed)
     env.render(policy, value)
-    
     print('')
     
     linear_env = LinearWrapper(env)

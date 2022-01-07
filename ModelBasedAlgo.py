@@ -68,7 +68,9 @@ def value_iteration(env, gamma, theta, max_iterations, value=None):
     # Implement the core logic for value iteration
     policy = np.zeros(env.n_states, dtype=int)
     # Loop till max iterations reached
+    iter_count = 0
     while max_iterations:
+        iter_count += 1
         # Set delta to 0 for current iteration
         delta = 0
         for current_state in range(env.n_states):  # for all the current states in n_states
@@ -90,5 +92,5 @@ def value_iteration(env, gamma, theta, max_iterations, value=None):
         policy[current_state] = np.argmax(action_values)
 
 
-    print("Value iteration : iterations count " + str(max_iterations))
+    print("Value iteration : iterations count " + str(iter_count))
     return policy, value
