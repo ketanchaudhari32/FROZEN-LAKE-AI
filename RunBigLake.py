@@ -47,12 +47,12 @@ def main():
     print('')
     
     print('## Sarsa')
-    policy, value = TablularModelFreeAlgo.sarsa(best_value, env, max_episodes, eta, gamma, epsilon, seed=seed)
+    policy, value = TablularModelFreeAlgo.sarsa(env, max_episodes, eta, gamma, epsilon, seed=seed)
     env.render(policy, value)
     print('')
     
     print('## Q-learning')
-    policy, value = TablularModelFreeAlgo.q_learning(best_value, env, max_episodes, eta, gamma, epsilon, seed=seed)
+    policy, value = TablularModelFreeAlgo.q_learning(env, max_episodes, eta, gamma, epsilon, seed=seed)
     env.render(policy, value)
     print('')
     
