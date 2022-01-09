@@ -3,7 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="9b5081d2-c57d-42a2-ba6d-ffbd2c55cefe" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ModelBasedAlgo.py" beforeDir="false" afterPath="$PROJECT_DIR$/ModelBasedAlgo.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/RunBigLake.py" beforeDir="false" afterPath="$PROJECT_DIR$/RunBigLake.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
