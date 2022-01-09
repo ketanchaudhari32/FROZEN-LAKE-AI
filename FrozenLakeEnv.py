@@ -46,19 +46,19 @@ class FrozenLake(Environment):
         self.goal = np.where(self.lake_flat == "$")[0]
 
         # Set the probabilities for each state and action
-        self.transaction_probabilties = np.zeros((self.n_states,self.n_states,self.n_actions))
+        self.transition_probabilities = np.zeros((self.n_states, self.n_states, self.n_actions))
         for state in range(self.n_states):
             for action in range(self.n_actions):
                 # Get the valid next state
                 next_state = self.get_valid_next_state(state,action)
                 # If current state is goal/hole/absorbing state, any action will lead to absorbing state.
                 if state in self.goal or state in self.holes or state == self.absorbing_state:
-                    self.transaction_probabilties[self.absorbing_state,state,action] = 1
+                    self.transition_probabilities[self.absorbing_state,state,action] = 1
                 # Else calculate the probability according to the slip probability
                 else:
-                    self.transaction_probabilties[next_state,state,action] += 1 - self.slip 
+                    self.transition_probabilities[next_state,state,action] += 1 - self.slip 
                     for i in range(self.n_actions):
-                        self.transaction_probabilties[next_state, state, i] += (self.slip/self.n_actions)
+                        self.transition_probabilities[next_state, state, i] += (self.slip/self.n_actions)
 
     def get_valid_next_state(self, state, action):
         if action == 0 and state < self.n_states - 1  and state not in self.holes: #up
@@ -96,7 +96,7 @@ class FrozenLake(Environment):
         
     def p(self, next_state, state, action):
         # Return the probability of reaching next_state from state based on an action
-        return self.transaction_probabilties[next_state,state,action]
+        return self.transition_probabilities[next_state,state,action]
     
     def r(self, next_state, state, action):
          # If the current state is goal state, return reward 1, otherwise return reward 0
